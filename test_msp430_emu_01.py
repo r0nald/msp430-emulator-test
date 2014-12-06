@@ -26,7 +26,32 @@ class TestDualOperandInstructions(unittest.TestCase):
         self.assertEquals(mcu.pc, 0x0004)
 
     def test_mov(self):
-        pass
+        mcu = Emulator()
+        # Random stack-pointer far away
+        write_word(Registers.SP, mcu.registers, 0xA000)
+
+        ad_bw_as = 0b1011
+        src = 0 # operand next word in memory
+        dst = 1 # address is SP + next word in memory
+        val = 0x1337
+        sp_offset = 0
+
+        write_word(0x0000, mcu.memspace,
+                   (Instructions.MOV[0]
+                    | 0x0000 # src == 0
+                    | (ad_bw_as << 4)
+                    | dst))
+        write_word(0x0002, mcu.memspace, val)
+        write_word(0x0004, mcu.memspace, sp_offset)
+
+        mcu.pc = 0
+        mcu.exec_instruction()
+
+        self.assertEquals(read_from_stack(sp_offset,
+                                          mcu.memspace,
+                                          mcu.registers),
+                          val)
+
 
 
 if __name__ == '__main__':

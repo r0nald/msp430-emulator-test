@@ -7,7 +7,7 @@ class Instructions:
     # XXX _B and _W difference not taken into account
     # in the instruction and bit-masks here:
     XOR = (0xe000, 0xf000)
-    MOV_W = (0x4000, 0xf000)
+    MOV = (0x4000, 0xf000)
     SUB_W = (0x8000, 0xf000)
     CMP_W = (0x9000, 0xf000)
     JEQ = (0x2400, 0xff00)
@@ -21,6 +21,11 @@ def read_word(index, memspace):
 def write_word(index, memspace, val):
     memspace[index+1] = 0xFF & (val >> 8)
     memspace[index] = 0xFF & val
+
+
+def read_from_stack(offset, memspace, registers):
+    sp = read_word(Registers.SP, registers)
+    return read_word(sp + offset, memspace)
 
 
 class Registers:
@@ -76,7 +81,7 @@ class DualOperands:
                 self.src_val = as_bits
         elif as_bits == 0b11 and src == 0:
             # Immediate, source is in address given by next word
-            self.src_val = read_word(self.pc + 2)
+            self.src_val = read_word(self.pc + 2, self.memspace)
             self.is_src_in_mem = True
         else:
            raise NotImplementedError('Instruction 0x%x not implemented'
@@ -86,7 +91,8 @@ class DualOperands:
             # stack pointer
             # It could be that next word contains 0 for SP+0
             self._destination = (Destination.Memspace,
-                                self.registers[Registers.SP])
+                                 read_word(Registers.SP,
+                                           self.registers))
         elif dst == 2:
             dst_addr = read_word(self.pc
                                  + (4 if self.is_src_in_mem else 2),
@@ -168,7 +174,7 @@ class Emulator:
         elif instruction_nibble & 0xE == 0x2000:
             # JMP instructions
             pass
-        elif instruction_nibble >= 0x8000:
+        elif instruction_nibble >= 0x4000:
             instruction_obj = DualOperandInstruction(self.pc,
                                                      self.memspace,
                                                      self.registers)
