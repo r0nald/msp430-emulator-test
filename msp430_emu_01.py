@@ -1,5 +1,6 @@
 import array
 
+
 # Need to implement:
 # XOR.B, MOV.W, SUB.W, TST.W == CMP, JEQ, JMP
 class Instructions:
@@ -45,14 +46,14 @@ class Registers:
 def set_z(registers):
     Z_bit = 1
     val = read_word(Registers.SR, registers)
-    val |= 1<<Z_bit
+    val |= 1 << Z_bit
     write_word(Registers.SR, registers, val)
 
 
 def clear_z(registers):
     Z_bit = 1
     val = read_word(Registers.SR, registers)
-    val &= ~(1<<Z_bit)
+    val &= ~(1 << Z_bit)
     write_word(Registers.SR, registers, val)
 
 
@@ -98,15 +99,15 @@ class DualOperands:
             self.src_val = read_word(self.pc + 2, self.memspace)
             self.is_src_in_mem = True
         else:
-           raise NotImplementedError('Instruction 0x%x not implemented'
-                                     % self.instruction_word)
+            raise NotImplementedError('Instruction 0x%x not implemented'
+                                      % self.instruction_word)
 
         if dst == 1:
             # stack pointer
             # next word contains SP offset
             offset = read_word(self.pc + 4, self.memspace) \
-                     if self.is_src_in_mem \
-                     else read_word(self.pc + 2, self.memspace)
+                if self.is_src_in_mem \
+                else read_word(self.pc + 2, self.memspace)
             self._destination = (Destination.Memspace,
                                  read_word(Registers.SP,
                                            self.registers) + offset)
@@ -116,8 +117,8 @@ class DualOperands:
                                  self.memspace)
             self._destination = (Destination.Memspace, dst_addr)
         else:
-           raise NotImplementedError('Instruction 0x%h not implemented'
-                                     % self.instruction_word)
+            raise NotImplementedError('Instruction 0x%h not implemented'
+                                      % self.instruction_word)
 
     def instruction_step(self):
         """ Next instruction should be found after how many bytes """
@@ -156,7 +157,7 @@ class DualOperandInstruction:
                        - self.operands.source_operand_val())
         elif is_instruction(Instructions.CMP, self.instruction_word):
             if read_word(self.operands.destination()[1],
-                          self.memspace) \
+                         self.memspace) \
                     == self.operands.source_operand_val():
                 set_z(self.registers)
             else:
@@ -167,8 +168,9 @@ class DualOperandInstruction:
             dst_val = read_word(dst_addr, self.memspace)
             write_word(dst_addr, self.memspace, dst_val ^ operand)
         else:
-           raise NotImplementedError('Instruction 0x%h not implemented'
-                                     % self.instruction_word)
+            raise NotImplementedError('Instruction 0x%h not implemented'
+                                      % self.instruction_word)
+
 
 class JumpInstruction:
     def __init__(self, pc, memspace, registers):
@@ -189,8 +191,8 @@ class JumpInstruction:
         elif is_instruction(Instructions.JMP, self.instruction_word):
                 self._next_pc = self.pc + 2*offset + 2
         else:
-           raise NotImplementedError('Instruction 0x%x not implemented'
-                                     % self.instruction_word)
+            raise NotImplementedError('Instruction 0x%x not implemented'
+                                      % self.instruction_word)
 
     def next_pc(self):
         return self._next_pc
@@ -213,7 +215,7 @@ class Emulator:
             # JMP instructions
             instruction_obj = JumpInstruction(self.pc,
                                               self.memspace,
-                                              self.registers)    
+                                              self.registers)
         elif instruction_nibble >= 0x4000:
             instruction_obj = DualOperandInstruction(self.pc,
                                                      self.memspace,
@@ -228,7 +230,7 @@ class Emulator:
         return read_from_stack(offset, self.memspace, self.registers)
 
     def set_sp(self, sp):
-        write_word(Registers.SP, self.registers,sp)
+        write_word(Registers.SP, self.registers, sp)
 
     def get_z(self):
         return get_z(self.registers)

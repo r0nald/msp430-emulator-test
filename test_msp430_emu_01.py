@@ -1,16 +1,17 @@
 import unittest
 from msp430_emu_01 import *
 
+
 class TestDualOperandInstructions(unittest.TestCase):
     def test_xor(self):
         mcu = Emulator()
         ad_bw_as = 0b1101
         dst_addr = 0x00A0
         write_word(0x0000, mcu.memspace,
-            (Instructions.XOR[0] |
-             0x0300 | # src == 3 <-> const 1
-             (ad_bw_as << 4) |
-             0x0002)) # destination addr in next word
+                   (Instructions.XOR[0] |
+                    0x0300 |   # src == 3 <-> const 1
+                    (ad_bw_as << 4) |
+                    0x0002))   # destination addr in next word
         write_word(0x0002, mcu.memspace, dst_addr)
 
         mcu.pc = 0
@@ -31,14 +32,14 @@ class TestDualOperandInstructions(unittest.TestCase):
         mcu.set_sp(0xA000)
 
         ad_bw_as = 0b1011
-        src = 0 # operand next word in memory
-        dst = 1 # address is SP + next word in memory
+        src = 0     # operand next word in memory
+        dst = 1     # address is SP + next word in memory
         val = 0x1337
         sp_offset = 0
 
         write_word(0x0000, mcu.memspace,
                    (Instructions.MOV[0]
-                    | 0x0000 # src == 0
+                    | 0x0000    # src == 0
                     | (ad_bw_as << 4)
                     | dst))
         write_word(0x0002, mcu.memspace, val)
@@ -55,9 +56,9 @@ class TestDualOperandInstructions(unittest.TestCase):
         mcu.set_sp(0xA000)
 
         ad_bw_as = 0b1001
-        src = 3 # operand const 1 (as == 01)
-        dst = 1 # address is SP + next word in memory
-        sp_offset = 1 # next word in memory
+        src = 3     # operand const 1 (as == 01)
+        dst = 1     # address is SP + next word in memory
+        sp_offset = 1   # next word in memory
 
         initial_val = 0x1337
         mcu.write_stack(sp_offset, initial_val)
@@ -82,9 +83,9 @@ class TestDualOperandInstructions(unittest.TestCase):
         mcu.set_sp(0xA000)
 
         ad_bw_as = 0b1000
-        src = 3 # operand const 0 (as == 00)
-        dst = 1 # address is SP + next word in memory
-        sp_offset = 0 # next word in memory
+        src = 3     # operand const 0 (as == 00)
+        dst = 1     # address is SP + next word in memory
+        sp_offset = 0   # next word in memory
 
         write_word(0x0000, mcu.memspace,
                    (Instructions.CMP[0]
@@ -112,7 +113,6 @@ class TestDualOperandInstructions(unittest.TestCase):
         mcu.pc = 0
         mcu.exec_instruction()
         self.assertEquals(mcu.pc, 2*jmp_offset + 2)
-
 
     def test_jeq_jz(self):
         mcu = Emulator()
