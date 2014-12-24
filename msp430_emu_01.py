@@ -37,6 +37,9 @@ def write_to_stack(offset, memspace, registers, val):
     sp = read_word(Registers.SP, registers)
     return write_word(sp + offset, memspace, val)
 
+def _raise_notimplemented(instruction):
+    raise NotImplementedError('Instruction 0x%x not implemented'
+                              % instruction)
 
 class Registers:
     SP = 1
@@ -99,8 +102,7 @@ class DualOperands:
             self.src_val = read_word(self.pc + 2, self.memspace)
             self.is_src_in_mem = True
         else:
-            raise NotImplementedError('Instruction 0x%x not implemented'
-                                      % self.instruction_word)
+            _raise_notimplemented(self.instruction_word)
 
         if dst == 1:
             # stack pointer
@@ -117,8 +119,7 @@ class DualOperands:
                                  self.memspace)
             self._destination = (Destination.Memspace, dst_addr)
         else:
-            raise NotImplementedError('Instruction 0x%h not implemented'
-                                      % self.instruction_word)
+            _raise_notimplemented(self.instruction_word)
 
     def instruction_step(self):
         """ Next instruction should be found after how many bytes """
@@ -168,8 +169,7 @@ class DualOperandInstruction:
             dst_val = read_word(dst_addr, self.memspace)
             write_word(dst_addr, self.memspace, dst_val ^ operand)
         else:
-            raise NotImplementedError('Instruction 0x%h not implemented'
-                                      % self.instruction_word)
+            _raise_notimplemented(self.instruction_word)
 
 
 class JumpInstruction:
@@ -193,8 +193,7 @@ class JumpInstruction:
         elif is_instruction(Instructions.JMP, self.instruction_word):
                 self._next_pc = self.pc + 2*offset + 2
         else:
-            raise NotImplementedError('Instruction 0x%x not implemented'
-                                      % self.instruction_word)
+            _raise_notimplemented(self.instruction_word)
 
     def next_pc(self):
         return self._next_pc
