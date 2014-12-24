@@ -38,9 +38,11 @@ hex_file_string = """
 :00000001FF
 """
 
+
 def led_status(mcu):
     PAOUT = 0x0202
     return mcu.memspace[PAOUT] & 1
+
 
 def run_mcu(hex_code):
     mcu = Emulator()
@@ -65,6 +67,7 @@ def run_mcu(hex_code):
             t = 1.0 * i / mcu_freq
             print 't = %f LED %d' % (t, led_status(mcu))
         mcu.exec_instruction()
+
 
 def main():
     if len(sys.argv) > 1:
