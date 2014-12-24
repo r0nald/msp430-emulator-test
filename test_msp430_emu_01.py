@@ -104,6 +104,19 @@ class TestDualOperandInstructions(unittest.TestCase):
         mcu.exec_instruction()
         self.assertTrue(mcu.get_z())
 
+    def test_jmp(self):
+        mcu = Emulator()
+
+        jmp_offset = 123
+
+        write_word(0x0000, mcu.memspace,
+                   (Instructions.JMP[0] | jmp_offset))
+
+        mcu.pc = 0
+        mcu.exec_instruction()
+
+        self.assertEquals(mcu.pc, 2*jmp_offset + 2)
+
 
 if __name__ == '__main__':
     unittest.main()

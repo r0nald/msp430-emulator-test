@@ -177,10 +177,33 @@ class JumpInstruction:
         self.pc = pc
         self.memspace = memspace
         self.registers = registers
-        self.instruction = memspace[pc]
+        self.instruction_word = read_word(pc, memspace)
+        self._next_pc = None
 
     def execute(self):
-        offset = (self.instruction & 0x03FF)
+        offset = (self.instruction_word & 0x03FF)
+        condition = ((self.instruction_word & 0x1C00) >> 10)
+
+        jmp_types = {
+            0b001: 'JEQ_JZ',
+            0b111: 'JMP'
+        }
+
+        if condition not in jmp_types:
+           raise NotImplementedError('Instruction 0x%x not implemented'
+                                     % self.instruction_word)
+
+        if jmp_types[condition] == 'JEQ':
+            if get_z(self.registers):
+                self._next_pc = self.pc + 2*offset + 2
+            else:
+                self._next_pc = self.pc + 2
+        elif jmp_types[condition] == 'JMP':
+                self._next_pc = self.pc + 2*offset + 2
+
+    def next_pc(self):
+        return self._next_pc
+
 
 class Emulator:
     def __init__(self):
@@ -195,9 +218,11 @@ class Emulator:
         if instruction_nibble == 0x1000:
             # single-operand instructions
             pass
-        elif instruction_nibble & 0xE == 0x2000:
+        elif instruction_nibble in [0x2000, 0x3000]:
             # JMP instructions
-            pass
+            instruction_obj = JumpInstruction(self.pc,
+                                              self.memspace,
+                                              self.registers)    
         elif instruction_nibble >= 0x4000:
             instruction_obj = DualOperandInstruction(self.pc,
                                                      self.memspace,
