@@ -42,8 +42,8 @@ def _raise_notimplemented(instruction):
                               % instruction)
 
 class Registers:
-    SP = 1
-    SR = 2
+    SP = 2
+    SR = 4
 
 
 def set_z(registers):
@@ -232,6 +232,9 @@ class Emulator:
 
     def set_sp(self, sp):
         write_word(Registers.SP, self.registers, sp)
+
+    def get_sp(self):
+        return read_word(Registers.SP, self.registers)
 
     def get_z(self):
         return get_z(self.registers)
