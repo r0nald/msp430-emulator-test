@@ -146,28 +146,22 @@ class DualOperandInstruction:
         return self.pc + self.operands.instruction_step()
 
     def execute(self):
-        instruction = self.instruction_word & 0xF000
-
-        if instruction == 0x4000:
-            # MOV
+        if is_instruction(Instructions.MOV, self.instruction_word):
             write_word(self.operands.destination()[1], self.memspace,
                        self.operands.source_operand_val())
-        elif instruction == 0x8000:
-            # SUB
+        elif is_instruction(Instructions.SUB, self.instruction_word):
             write_word(self.operands.destination()[1], self.memspace,
                        read_word(self.operands.destination()[1],
                                  self.memspace)
                        - self.operands.source_operand_val())
-        elif instruction == 0x9000:
-            # CMP/TST
+        elif is_instruction(Instructions.CMP, self.instruction_word):
             if read_word(self.operands.destination()[1],
                           self.memspace) \
                     == self.operands.source_operand_val():
                 set_z(self.registers)
             else:
                 clear_z(self.registers)
-        elif instruction == 0xE000:
-            # XOR
+        elif is_instruction(Instructions.XOR, self.instruction_word):
             operand = self.operands.source_operand_val()
             dst_addr = self.operands.destination()[1]
             dst_val = read_word(dst_addr, self.memspace)
@@ -186,16 +180,6 @@ class JumpInstruction:
 
     def execute(self):
         offset = (self.instruction_word & 0x03FF)
-        condition = ((self.instruction_word & 0x1C00) >> 10)
-
-        jmp_types = {
-            0b001: 'JEQ_JZ',
-            0b111: 'JMP'
-        }
-
-        if condition not in jmp_types:
-           raise NotImplementedError('Instruction 0x%x not implemented'
-                                     % self.instruction_word)
 
         if is_instruction(Instructions.JEQ, self.instruction_word):
             if get_z(self.registers):
@@ -204,6 +188,9 @@ class JumpInstruction:
                 self._next_pc = self.pc + 2
         elif is_instruction(Instructions.JMP, self.instruction_word):
                 self._next_pc = self.pc + 2*offset + 2
+        else:
+           raise NotImplementedError('Instruction 0x%x not implemented'
+                                     % self.instruction_word)
 
     def next_pc(self):
         return self._next_pc
