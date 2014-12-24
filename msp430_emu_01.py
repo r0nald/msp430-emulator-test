@@ -8,7 +8,7 @@ class Instructions:
     # in the instruction and bit-masks here:
     XOR = (0xe000, 0xf000)
     MOV = (0x4000, 0xf000)
-    SUB_W = (0x8000, 0xf000)
+    SUB = (0x8000, 0xf000)
     CMP_W = (0x9000, 0xf000)
     JEQ = (0x2400, 0xff00)
     JMP = (0x3C00, 0xff00)
@@ -26,6 +26,11 @@ def write_word(index, memspace, val):
 def read_from_stack(offset, memspace, registers):
     sp = read_word(Registers.SP, registers)
     return read_word(sp + offset, memspace)
+
+
+def write_to_stack(offset, memspace, registers, val):
+    sp = read_word(Registers.SP, registers)
+    return write_word(sp + offset, memspace, val)
 
 
 class Registers:
@@ -180,6 +185,12 @@ class Emulator:
                                                      self.registers)
         instruction_obj.execute()
         self.pc = instruction_obj.next_pc()
+
+    def write_stack(self, offset, val):
+        write_to_stack(offset, self.memspace, self.registers, val)
+
+    def read_stack(self, offset):
+        return read_from_stack(offset, self.memspace, self.registers)
 
     def run(self):
         while True:

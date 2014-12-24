@@ -47,11 +47,31 @@ class TestDualOperandInstructions(unittest.TestCase):
         mcu.pc = 0
         mcu.exec_instruction()
 
-        self.assertEquals(read_from_stack(sp_offset,
-                                          mcu.memspace,
-                                          mcu.registers),
-                          val)
+        self.assertEquals(mcu.read_stack(sp_offset), val)
 
+    def test_sub(self):
+        mcu = Emulator()
+        # Random stack-pointer far away
+        write_word(Registers.SP, mcu.registers, 0xA000)
+
+        ad_bw_as = 0b1001
+        src = 3 # operand const 1
+        dst = 1 # address is SP + next word in memory
+        sp_offset = 0 # next word in memory
+
+        initial_val = 0x1337
+        mcu.write_stack(sp_offset, initial_val)
+
+        write_word(0x0000, mcu.memspace,
+                   (Instructions.SUB[0]
+                    | (src << 8)
+                    | (ad_bw_as << 4)
+                    | dst))
+
+        mcu.pc = 0
+        mcu.exec_instruction()
+
+        self.assertEquals(mcu.read_stack(sp_offset), initial_val - 1)
 
 
 if __name__ == '__main__':
