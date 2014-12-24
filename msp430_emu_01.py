@@ -9,7 +9,7 @@ class Instructions:
     XOR = (0xe000, 0xf000)
     MOV = (0x4000, 0xf000)
     SUB = (0x8000, 0xf000)
-    CMP_W = (0x9000, 0xf000)
+    CMP = (0x9000, 0xf000)
     JEQ = (0x2400, 0xff00)
     JMP = (0x3C00, 0xff00)
 
@@ -94,10 +94,13 @@ class DualOperands:
 
         if dst == 1:
             # stack pointer
-            # It could be that next word contains 0 for SP+0
+            # next word contains SP offset
+            offset = read_word(self.pc + 4, self.memspace) \
+                     if self.is_src_in_mem \
+                     else read_word(self.pc + 2, self.memspace)
             self._destination = (Destination.Memspace,
                                  read_word(Registers.SP,
-                                           self.registers))
+                                           self.registers) + offset)
         elif dst == 2:
             dst_addr = read_word(self.pc
                                  + (4 if self.is_src_in_mem else 2),
@@ -170,6 +173,7 @@ class Emulator:
         self.registers = array.array('B', '\0' * 16)
         # TODO:
         self.pc = 0
+        # self.set_sp()
 
     def exec_instruction(self):
         instruction_nibble = read_word(self.pc, self.memspace) & 0xF000
@@ -191,6 +195,13 @@ class Emulator:
 
     def read_stack(self, offset):
         return read_from_stack(offset, self.memspace, self.registers)
+
+    def set_sp(self, sp):
+        write_word(Registers.SP, self.registers,sp)
+
+    def get_z(self):
+        Z_bit = 1
+        return 0x1 & (read_word(Registers.SR, self.registers) >> Z_bit)
 
     def run(self):
         while True:

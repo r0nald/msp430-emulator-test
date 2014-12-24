@@ -28,7 +28,7 @@ class TestDualOperandInstructions(unittest.TestCase):
     def test_mov(self):
         mcu = Emulator()
         # Random stack-pointer far away
-        write_word(Registers.SP, mcu.registers, 0xA000)
+        mcu.set_sp(0xA000)
 
         ad_bw_as = 0b1011
         src = 0 # operand next word in memory
@@ -52,12 +52,12 @@ class TestDualOperandInstructions(unittest.TestCase):
     def test_sub(self):
         mcu = Emulator()
         # Random stack-pointer far away
-        write_word(Registers.SP, mcu.registers, 0xA000)
+        mcu.set_sp(0xA000)
 
         ad_bw_as = 0b1001
-        src = 3 # operand const 1
+        src = 3 # operand const 1 (as == 01)
         dst = 1 # address is SP + next word in memory
-        sp_offset = 0 # next word in memory
+        sp_offset = 1 # next word in memory
 
         initial_val = 0x1337
         mcu.write_stack(sp_offset, initial_val)
@@ -67,11 +67,42 @@ class TestDualOperandInstructions(unittest.TestCase):
                     | (src << 8)
                     | (ad_bw_as << 4)
                     | dst))
+        write_word(0x0002, mcu.memspace, sp_offset)
 
         mcu.pc = 0
         mcu.exec_instruction()
 
         self.assertEquals(mcu.read_stack(sp_offset), initial_val - 1)
+
+    def test_tst(self):
+        # TST is same as CMP
+
+        mcu = Emulator()
+        # Random stack-pointer far away
+        mcu.set_sp(0xA000)
+
+        ad_bw_as = 0b1000
+        src = 3 # operand const 0 (as == 00)
+        dst = 1 # address is SP + next word in memory
+        sp_offset = 0 # next word in memory
+
+        write_word(0x0000, mcu.memspace,
+                   (Instructions.CMP[0]
+                    | (src << 8)
+                    | (ad_bw_as << 4)
+                    | dst))
+        write_word(0x0002, mcu.memspace, sp_offset)
+
+        # Write 123 to stack location, CMP should fail
+        mcu.write_stack(sp_offset, 123)
+        mcu.pc = 0
+        mcu.exec_instruction()
+        self.assertFalse(mcu.get_z())
+
+        mcu.write_stack(sp_offset, 0)
+        mcu.pc = 0
+        mcu.exec_instruction()
+        self.assertTrue(mcu.get_z())
 
 
 if __name__ == '__main__':
