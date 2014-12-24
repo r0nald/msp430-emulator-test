@@ -52,6 +52,11 @@ def clear_z(registers):
     write_word(Registers.SR, registers, val)
 
 
+def get_z(registers):
+    Z_bit = 1
+    return 0x1 & (read_word(Registers.SR, registers) >> Z_bit)
+
+
 class Destination:
     Register = 0
     Memspace = 1
@@ -167,6 +172,16 @@ class DualOperandInstruction:
            raise NotImplementedError('Instruction 0x%h not implemented'
                                      % self.instruction_word)
 
+class JumpInstruction:
+    def __init__(self, pc, memspace, registers):
+        self.pc = pc
+        self.memspace = memspace
+        self.registers = registers
+        self.instruction = memspace[pc]
+
+    def execute(self):
+        offset = (self.instruction & 0x03FF)
+
 class Emulator:
     def __init__(self):
         self.memspace = array.array('B', '\0' * 2 ** 16)
@@ -200,8 +215,7 @@ class Emulator:
         write_word(Registers.SP, self.registers,sp)
 
     def get_z(self):
-        Z_bit = 1
-        return 0x1 & (read_word(Registers.SR, self.registers) >> Z_bit)
+        return get_z(self.registers)
 
     def run(self):
         while True:
