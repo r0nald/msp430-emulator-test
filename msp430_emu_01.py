@@ -11,8 +11,8 @@ class Instructions:
     MOV = (0x4000, 0xf000)
     SUB = (0x8000, 0xf000)
     CMP = (0x9000, 0xf000)
-    JEQ = (0x2400, 0xff00)
-    JMP = (0x3C00, 0xff00)
+    JEQ = (0x2400, 0xfc00)
+    JMP = (0x3C00, 0xfc00)
 
 
 def is_instruction(instruction, word):
@@ -182,6 +182,8 @@ class JumpInstruction:
 
     def execute(self):
         offset = (self.instruction_word & 0x03FF)
+        if offset & (1<<9):
+            offset = -(2**10) + offset
 
         if is_instruction(Instructions.JEQ, self.instruction_word):
             if get_z(self.registers):
