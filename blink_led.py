@@ -3,6 +3,13 @@ from intelhex import IntelHex
 from StringIO import StringIO
 import sys
 
+
+# The hex strings are loaded with IntelHex Python library.
+# Get it from: http://www.bialix.com/intelhex/
+# Tested with version 1.5
+
+# This is hex file from "Blink The LED" example code
+# that came with Code Composer Studio.
 hex_file_string = """
 :20E000002A143F4000003F90010023283F4000003F9001001E283A4000003A8000003A50D5
 :20E0200007005A09394000003C493D493E493F49C80CCB0D1C530D630F184B5B00184BD850
