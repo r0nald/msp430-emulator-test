@@ -106,16 +106,30 @@ class TestDualOperandInstructions(unittest.TestCase):
 
     def test_jmp(self):
         mcu = Emulator()
+        jmp_offset = 123
+        write_word(0x0000, mcu.memspace,
+                   (Instructions.JMP[0] | jmp_offset))
+        mcu.pc = 0
+        mcu.exec_instruction()
+        self.assertEquals(mcu.pc, 2*jmp_offset + 2)
 
+
+    def test_jeq_jz(self):
+        mcu = Emulator()
         jmp_offset = 123
 
         write_word(0x0000, mcu.memspace,
-                   (Instructions.JMP[0] | jmp_offset))
+                   (Instructions.JEQ[0] | jmp_offset))
 
         mcu.pc = 0
+        mcu.clear_z()
         mcu.exec_instruction()
+        self.assertEquals(mcu.pc, 2)
 
-        self.assertEquals(mcu.pc, 2*jmp_offset + 2)
+        mcu.pc = 0
+        mcu.set_z()
+        mcu.exec_instruction()
+        self.assertEquals(mcu.pc, 2 + 2*jmp_offset)
 
 
 if __name__ == '__main__':

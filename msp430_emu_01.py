@@ -14,6 +14,10 @@ class Instructions:
     JMP = (0x3C00, 0xff00)
 
 
+def is_instruction(instruction, word):
+    return ((word ^ instruction[0]) & instruction[1]) == 0
+
+
 def read_word(index, memspace):
     return memspace[index+1] << 8 | memspace[index]
 
@@ -193,12 +197,12 @@ class JumpInstruction:
            raise NotImplementedError('Instruction 0x%x not implemented'
                                      % self.instruction_word)
 
-        if jmp_types[condition] == 'JEQ':
+        if is_instruction(Instructions.JEQ, self.instruction_word):
             if get_z(self.registers):
                 self._next_pc = self.pc + 2*offset + 2
             else:
                 self._next_pc = self.pc + 2
-        elif jmp_types[condition] == 'JMP':
+        elif is_instruction(Instructions.JMP, self.instruction_word):
                 self._next_pc = self.pc + 2*offset + 2
 
     def next_pc(self):
@@ -241,6 +245,12 @@ class Emulator:
 
     def get_z(self):
         return get_z(self.registers)
+
+    def set_z(self):
+        set_z(self.registers)
+
+    def clear_z(self):
+        clear_z(self.registers)
 
     def run(self):
         while True:
