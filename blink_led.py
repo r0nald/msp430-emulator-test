@@ -1,6 +1,7 @@
 from msp430_emu_01 import Emulator, read_word
 from intelhex import IntelHex
 from StringIO import StringIO
+import sys
 
 hex_file_string = """
 :20E000002A143F4000003F90010023283F4000003F9001001E283A4000003A8000003A50D5
@@ -30,19 +31,40 @@ hex_file_string = """
 :00000001FF
 """
 
-ih = IntelHex(StringIO(hex_file_string))
-mcu = Emulator()
-mcu.memspace[ih.minaddr():ih.maxaddr()+1] = ih.tobinarray()
+def led_status(mcu):
+    PAOUT = 0x0202
+    return mcu.memspace[PAOUT] & 1
 
-# start of main function in memory:
-main_addr = 0xE070
-# we'll skip some initial instructions:
-skip_instructions = 12
+def run_mcu(hex_code):
+    mcu = Emulator()
+    mcu.memspace[hex_code.minaddr():hex_code.maxaddr()+1] \
+        = hex_code.tobinarray()
 
-mcu.pc = main_addr + skip_instructions
-# is this pretty random SP?
-mcu.set_sp(0x1fb0)
+    # start of main function in memory:
+    main_addr = 0xE070
+    # we'll skip some initial instructions:
+    skip_instructions = 12
 
-for i in range(10000):
-    print '%d : %x : %x' % (i, mcu.pc, read_word(mcu.pc, mcu.memspace))
-    mcu.exec_instruction()
+    mcu.pc = main_addr + skip_instructions
+    # is this pretty random SP?
+    mcu.set_sp(0x1fb0)
+
+    mcu_freq = 1 * (10**6)
+
+    print_freq = 200
+
+    for i in xrange(sys.maxint):
+        if (i * print_freq) % mcu_freq == 0:
+            t = 1.0 * i / mcu_freq
+            print 't = %f LED %d' % (t, led_status(mcu))
+        mcu.exec_instruction()
+
+def main():
+    if len(sys.argv) > 1:
+        hex_code = IntelHex(sys.argv[1])
+    else:
+        hex_code = IntelHex(StringIO(hex_file_string))
+    run_mcu(hex_code)
+
+if __name__ == '__main__':
+    main()
